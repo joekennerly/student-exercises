@@ -36,6 +36,15 @@ class Exercise:
     def __repr__(self):
         return f'exercise: {self.name} in {self.lang}'
 
+class StudentExercise:
+    def __init__(self, exercise, first, last):
+        self.exercise = exercise
+        self.student_first = first
+        self.student_last = last
+
+    def __repr__(self):
+        return f'{self.exercise} \n\t*{self.student_first} {self.student_last} '
+
 class StudentExerciseReports:
 
     """Methods for reports on the Student Exercises database"""
@@ -207,11 +216,52 @@ class StudentExerciseReports:
             for instructor in all_instructors:
                 print(instructor)
 
+    def all_student_exercises(self):
+
+        """Retrieve all exercises with a list of students"""
+
+        exercises = dict()
+
+        with sqlite3.connect(self.db_path) as conn:
+
+            db_cursor = conn.cursor()
+
+            db_cursor.execute("""
+            select
+                e.ExerciseId,
+                e.Name,
+                s.StudentId,
+                s.FirstName,
+                s.LastName
+            from Exercise e
+            join Student_Exercise se on se.ExerciseId = e.ExerciseId
+            join Student s on s.StudentId = se.StudentId
+            """)
+
+            all_student_exercises = db_cursor.fetchall()
+
+            for row in all_student_exercises:
+                exercise_id = row[0]
+                exercise_name = row[1]
+                student_id = row[2]
+                student_name = f'{row[3]} {row[4]}'
+
+                if exercise_name not in exercises:
+                    exercises[exercise_name] = [student_name]
+                else:
+                    exercises[exercise_name].append(student_name)
+
+            for exercise_name, students in exercises.items():
+                print(exercise_name)
+                for student in students:
+                    print(f'\t* {student}')
+
 reports = StudentExerciseReports()
-reports.all_cohorts()
-reports.all_exercises()
-reports.all_students()
-reports.all_instructors()
-reports.all_js_exercises()
-reports.all_py_exercises()
-reports.all_css_exercises()
+# reports.all_cohorts()
+# reports.all_exercises()
+# reports.all_students()
+# reports.all_instructors()
+# reports.all_js_exercises()
+# reports.all_py_exercises()
+# reports.all_css_exercises()
+reports.all_student_exercises()
